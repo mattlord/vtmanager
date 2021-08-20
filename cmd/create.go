@@ -16,8 +16,15 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
 	"fmt"
+	"io"
+	"os"
 
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/container"
+	"github.com/docker/docker/client"
+	"github.com/docker/docker/pkg/stdcopy"
 	"github.com/spf13/cobra"
 )
 
@@ -27,6 +34,57 @@ func runCreate(cmd *cobra.Command, args []string) {
 
 func runCreateCluster(cmd *cobra.Command, args []string) {
 	fmt.Printf("create cluster called with %s\n", args)
+
+	clusterName := args[0]
+
+	ctx := context.Background()
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		panic(err)
+	}
+
+	reader, err := cli.ImagePull(ctx, "docker.io/vitess/lite", types.ImagePullOptions{})
+	if err != nil {
+		panic(err)
+	}
+	io.Copy(os.Stdout, reader)
+
+	resp, err := cli.ContainerCreate(ctx, &container.Config{
+		Image: "vitess/lite",
+		Cmd:   []string{"/vt/bin/vtgate", "-version", "2>/dev/null"},
+		Tty:   false,
+	}, nil, nil, nil, fmt.Sprintf("cluster_%s", clusterName))
+	if err != nil {
+		panic(err)
+	}
+
+	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+		panic(err)
+	}
+
+	statusCh, errCh := cli.ContainerWait(ctx, resp.ID, container.WaitConditionNotRunning)
+	select {
+	case err := <-errCh:
+		if err != nil {
+			panic(err)
+		}
+	case <-statusCh:
+	}
+
+	out, err := cli.ContainerLogs(ctx, resp.ID, types.ContainerLogsOptions{ShowStdout: true})
+	if err != nil {
+		panic(err)
+	}
+
+	stdcopy.StdCopy(os.Stdout, os.Stderr, out)
+
+	if err := cli.ContainerStop(ctx, resp.ID, nil); err != nil {
+		panic(err)
+	}
+
+	if err := cli.ContainerRemove(ctx, resp.ID, types.ContainerRemoveOptions{}); err != nil {
+		panic(err)
+	}
 }
 
 func runCreateKeyspace(cmd *cobra.Command, args []string) {
@@ -42,9 +100,10 @@ var createCmd = &cobra.Command{
 }
 
 var subCreateClusterCmd = &cobra.Command{
-	Use:   "cluster",
+	Use:   "cluster [name]",
 	Short: "Create Vitess cluster",
 	Long:  ``,
+	Args:  cobra.ExactArgs(1),
 	Run:   runCreateCluster,
 }
 
@@ -61,5 +120,5 @@ func init() {
 	createCmd.AddCommand(subCreateClusterCmd)
 	createCmd.AddCommand(subCreateKeyspaceCmd)
 
-	createCmd.Flags().String("name", "", "object name")
+	//createCmd.Flags().StringVarP(&objectName, "name", "n", "", "object name")
 }
