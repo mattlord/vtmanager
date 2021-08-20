@@ -28,6 +28,15 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var (
+	clusterVersion string
+)
+
+const (
+	VITESS_LITE_CONTAINER_IMAGE = "docker.io/vitess/lite"
+	ETCD_CONTAINER_IMAGE        = "docker.io/bitnami/etcd:3.5.0"
+)
+
 func runCreate(cmd *cobra.Command, args []string) {
 	fmt.Printf("create called with %s\n", args)
 }
@@ -36,6 +45,11 @@ func runCreateCluster(cmd *cobra.Command, args []string) {
 	fmt.Printf("create cluster called with %s\n", args)
 
 	clusterName := args[0]
+	containerImage := VITESS_LITE_CONTAINER_IMAGE
+
+	if clusterVersion != "latest" {
+		containerImage += ":v" + clusterVersion
+	}
 
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
@@ -43,14 +57,17 @@ func runCreateCluster(cmd *cobra.Command, args []string) {
 		panic(err)
 	}
 
-	reader, err := cli.ImagePull(ctx, "docker.io/vitess/lite", types.ImagePullOptions{})
-	if err != nil {
-		panic(err)
+	for _, image := range []string{ETCD_CONTAINER_IMAGE, containerImage} {
+		reader, err := cli.ImagePull(ctx, image, types.ImagePullOptions{})
+		if err != nil {
+			fmt.Printf("ERROR: container image %s not found\n", image)
+			os.Exit(1)
+		}
+		io.Copy(os.Stdout, reader)
 	}
-	io.Copy(os.Stdout, reader)
 
 	resp, err := cli.ContainerCreate(ctx, &container.Config{
-		Image: "vitess/lite",
+		Image: containerImage,
 		Cmd:   []string{"/vt/bin/vtgate", "-version", "2>/dev/null"},
 		Tty:   false,
 	}, nil, nil, nil, fmt.Sprintf("cluster_%s", clusterName))
@@ -99,7 +116,7 @@ var createCmd = &cobra.Command{
 	Run:   runCreate,
 }
 
-var subCreateClusterCmd = &cobra.Command{
+var createClusterCmd = &cobra.Command{
 	Use:   "cluster [name]",
 	Short: "Create Vitess cluster",
 	Long:  ``,
@@ -107,7 +124,7 @@ var subCreateClusterCmd = &cobra.Command{
 	Run:   runCreateCluster,
 }
 
-var subCreateKeyspaceCmd = &cobra.Command{
+var createKeyspaceCmd = &cobra.Command{
 	Use:   "keyspace",
 	Short: "Create Vitess keyspace",
 	Long:  ``,
@@ -117,8 +134,8 @@ var subCreateKeyspaceCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(createCmd)
 
-	createCmd.AddCommand(subCreateClusterCmd)
-	createCmd.AddCommand(subCreateKeyspaceCmd)
+	createCmd.AddCommand(createClusterCmd)
+	createCmd.AddCommand(createKeyspaceCmd)
 
-	//createCmd.Flags().StringVarP(&objectName, "name", "n", "", "object name")
+	createClusterCmd.Flags().StringVarP(&clusterVersion, "version", "v", "latest", "version of vitess")
 }
