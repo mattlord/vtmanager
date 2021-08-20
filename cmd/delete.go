@@ -16,36 +16,60 @@ limitations under the License.
 package cmd
 
 import (
+	"context"
 	"fmt"
 
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/client"
 	"github.com/spf13/cobra"
 )
 
+func runDeleteCluster(cmd *cobra.Command, args []string) {
+	fmt.Printf("delete cluster called with %s\n", args)
+
+	clusterName := args[0]
+
+	ctx := context.Background()
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		panic(err)
+	}
+
+	for _, baseName := range []string{"vtgate", "vtctld", "vttablet", "mysqld", "etcd"} {
+		containerName := fmt.Sprintf("%s-%s", baseName, clusterName)
+		if err := cli.ContainerStop(ctx, containerName, nil); err != nil {
+			fmt.Println(err)
+		}
+
+		if err := cli.ContainerRemove(ctx, containerName, types.ContainerRemoveOptions{}); err != nil {
+			fmt.Println(err)
+		}
+	}
+
+	if err := cli.NetworkRemove(ctx, "net-"+clusterName); err != nil {
+		fmt.Println(err)
+	}
+}
+
 // deleteCmd represents the delete command
 var deleteCmd = &cobra.Command{
-	Use:   "delete [cluster,cell,keyspace,shard]",
+	Use:   "delete",
 	Short: "Delete Vitess objects",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
 		fmt.Println("delete called")
 	},
 }
 
+var deleteClusterCmd = &cobra.Command{
+	Use:   "cluster [name]",
+	Short: "Delete a Vitess cluster",
+	Long:  ``,
+	Args:  cobra.ExactArgs(1),
+	Run:   runDeleteCluster,
+}
+
 func init() {
 	rootCmd.AddCommand(deleteCmd)
-
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	deleteCmd.PersistentFlags().String("keyspace", "", "Delete a Vitess keyspace")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// deleteCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	deleteCmd.AddCommand(deleteClusterCmd)
 }

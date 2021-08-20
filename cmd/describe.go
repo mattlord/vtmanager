@@ -21,16 +21,16 @@ import (
 	"github.com/spf13/cobra"
 )
 
-// updateCmd represents the update command
-var updateCmd = &cobra.Command{
-	Use:   "update",
-	Short: "Update Vitess objects",
+// describeCmd represents the describe command
+var describeCmd = &cobra.Command{
+	Use:   "describe [cluster,cell,keyspace,shard]",
+	Short: "Describe Vitess objects",
 	Long:  ``,
 	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("update called")
+		fmt.Println("describe called")
 	},
 }
 
 func init() {
-	rootCmd.AddCommand(updateCmd)
+	rootCmd.AddCommand(describeCmd)
 }

@@ -20,7 +20,6 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
-
 	"github.com/spf13/viper"
 )
 
@@ -30,12 +29,7 @@ var cfgFile string
 var rootCmd = &cobra.Command{
 	Use:   "vtmanager",
 	Short: "Manage local containerized Vitess deployments",
-	Long: `A longer description that spans multiple lines and likely contains
-examples and usage of using your application. For example:
-
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
+	Long:  `Manage local containerized Vitess deployments`,
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
