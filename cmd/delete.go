@@ -23,8 +23,8 @@ import (
 
 // deleteCmd represents the delete command
 var deleteCmd = &cobra.Command{
-	Use:   "delete",
-	Short: "A brief description of your command",
+	Use:   "delete [cluster,cell,keyspace,shard]",
+	Short: "Delete Vitess objects",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
 
@@ -37,13 +37,13 @@ to quickly create a Cobra application.`,
 }
 
 func init() {
-	cellAliasCmd.AddCommand(deleteCmd)
+	rootCmd.AddCommand(deleteCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// deleteCmd.PersistentFlags().String("foo", "", "A help for foo")
+	deleteCmd.PersistentFlags().String("keyspace", "", "Delete a Vitess keyspace")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:

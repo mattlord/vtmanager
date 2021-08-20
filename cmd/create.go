@@ -21,31 +21,45 @@ import (
 	"github.com/spf13/cobra"
 )
 
+func runCreate(cmd *cobra.Command, args []string) {
+	fmt.Printf("create called with %s\n", args)
+}
+
+func runCreateCluster(cmd *cobra.Command, args []string) {
+	fmt.Printf("create cluster called with %s\n", args)
+}
+
+func runCreateKeyspace(cmd *cobra.Command, args []string) {
+	fmt.Printf("create keyspace called with %s\n", args)
+}
+
 // createCmd represents the create command
 var createCmd = &cobra.Command{
 	Use:   "create",
-	Short: "A brief description of your command",
-	Long: `A longer description that spans multiple lines and likely contains examples
-and usage of using your command. For example:
+	Short: "Create Vitess objects",
+	Long:  ``,
+	Run:   runCreate,
+}
 
-Cobra is a CLI library for Go that empowers applications.
-This application is a tool to generate the needed files
-to quickly create a Cobra application.`,
-	Run: func(cmd *cobra.Command, args []string) {
-		fmt.Println("create called")
-	},
+var subCreateClusterCmd = &cobra.Command{
+	Use:   "cluster",
+	Short: "Create Vitess cluster",
+	Long:  ``,
+	Run:   runCreateCluster,
+}
+
+var subCreateKeyspaceCmd = &cobra.Command{
+	Use:   "keyspace",
+	Short: "Create Vitess keyspace",
+	Long:  ``,
+	Run:   runCreateKeyspace,
 }
 
 func init() {
-	cellAliasCmd.AddCommand(createCmd)
+	rootCmd.AddCommand(createCmd)
 
-	// Here you will define your flags and configuration settings.
+	createCmd.AddCommand(subCreateClusterCmd)
+	createCmd.AddCommand(subCreateKeyspaceCmd)
 
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// createCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// createCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	createCmd.Flags().String("name", "", "object name")
 }

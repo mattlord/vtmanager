@@ -23,8 +23,8 @@ import (
 
 // updateCmd represents the update command
 var updateCmd = &cobra.Command{
-	Use:   "update",
-	Short: "A brief description of your command",
+	Use:   "update [cluster,cell,keyspace,shard]",
+	Short: "Update Vitess objects",
 	Long: `A longer description that spans multiple lines and likely contains examples
 and usage of using your command. For example:
 
@@ -37,13 +37,13 @@ to quickly create a Cobra application.`,
 }
 
 func init() {
-	cellAliasCmd.AddCommand(updateCmd)
+	rootCmd.AddCommand(updateCmd)
 
 	// Here you will define your flags and configuration settings.
 
 	// Cobra supports Persistent Flags which will work for this command
 	// and all subcommands, e.g.:
-	// updateCmd.PersistentFlags().String("foo", "", "A help for foo")
+	updateCmd.PersistentFlags().String("shard", "", "Update a Vitess shard: vttablet(s) and mysqld(s)")
 
 	// Cobra supports local flags which will only run when this command
 	// is called directly, e.g.:
