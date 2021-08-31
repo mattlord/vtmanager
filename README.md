@@ -2,7 +2,9 @@
 Tool for managing container based Vitess deployments for testing purposes
 
 # Install
+```
 go get github.com/mattlord/vtmanager
+```
 
 # Usage
 ```
