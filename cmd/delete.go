@@ -18,15 +18,15 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"time"
 
+	"github.com/briandowns/spinner"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/client"
 	"github.com/spf13/cobra"
 )
 
 func runDeleteCluster(cmd *cobra.Command, args []string) {
-	fmt.Printf("delete cluster called with %s\n", args)
-
 	clusterName := args[0]
 
 	ctx := context.Background()
@@ -35,16 +35,29 @@ func runDeleteCluster(cmd *cobra.Command, args []string) {
 		panic(err)
 	}
 
-	for _, baseName := range []string{"vtgate", "vtctld", "vttablet", "mysqld", "etcd"} {
-		containerName := fmt.Sprintf("%s-%s", baseName, clusterName)
-		if err := cli.ContainerStop(ctx, containerName, nil); err != nil {
-			fmt.Println(err)
-		}
+	fmt.Printf("Stopping and deleting containers for the %s cluster\n", clusterName)
+	spinr := spinner.New(spinner.CharSets[SPANNER_CHARSET], 100*time.Millisecond)
+	spinr.Start()
+	spinr.FinalMSG = "done!"
 
-		if err := cli.ContainerRemove(ctx, containerName, types.ContainerRemoveOptions{}); err != nil {
-			fmt.Println(err)
+	for _, baseVitessContainer := range vitessContainers {
+		for n := 1; n <= baseVitessContainer.count; n++ {
+			containerName := fmt.Sprintf("%s-%s", baseVitessContainer.name, clusterName)
+			if baseVitessContainer.count > 1 {
+				containerName += fmt.Sprintf("-%d", n)
+			}
+
+			if err := cli.ContainerStop(ctx, containerName, nil); err != nil {
+				fmt.Println(err)
+			}
+
+			if err := cli.ContainerRemove(ctx, containerName, types.ContainerRemoveOptions{}); err != nil {
+				fmt.Println(err)
+			}
 		}
 	}
+
+	spinr.Stop()
 
 	if err := cli.NetworkRemove(ctx, "net-"+clusterName); err != nil {
 		fmt.Println(err)
