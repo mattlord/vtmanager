@@ -47,3 +47,5 @@ require (
 	google.golang.org/grpc v1.38.0 // indirect
 	google.golang.org/protobuf v1.26.0 // indirect
 )
+
+require github.com/containerd/ttrpc v1.0.2 // indirect
