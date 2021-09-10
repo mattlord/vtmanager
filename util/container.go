@@ -19,6 +19,7 @@ package util
 import (
 	"context"
 	"fmt"
+	"io"
 	"os"
 	"strings"
 	"time"
@@ -59,13 +60,16 @@ func ContainerRuntimeInit(ctx context.Context, clusterName string) *client.Clien
 			baseVitessContainer.Config.Image += ":v" + globals.ClusterVersion
 		}
 
-		_, err := cli.ImagePull(ctx, baseVitessContainer.Config.Image, types.ImagePullOptions{})
+		reader, err := cli.ImagePull(ctx, baseVitessContainer.Config.Image, types.ImagePullOptions{})
 
 		if err != nil {
 			fmt.Printf("Container image %s not found\n", baseVitessContainer.Config.Image)
 			os.Exit(1)
 		}
+
+		defer reader.Close()
 		//io.Copy(os.Stdout, reader)
+		io.ReadAll(reader)
 	}
 
 	spinr.Stop()
