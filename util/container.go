@@ -130,13 +130,29 @@ func ContainerRun(ctx context.Context, cli *client.Client, clusterName string, k
 						fmt.Sprintf("%s-%d", globals.BaseTabletAliasFlag, n),
 						fmt.Sprintf("-tablet_hostname=%s", vitessContainer.Config.Hostname),
 					}
+					if globals.ExtraVTTabletFlags != "" {
+						addlTabletFlags = append(addlTabletFlags, strings.Split(globals.ExtraVTTabletFlags, ",")...)
+					}
 					vitessContainer.Config.Cmd = append(vitessContainer.Config.Cmd, addlTabletFlags...)
+				}
+
+				if vitessContainer.Name == "vtgate" {
+					addlGatewayFlags := []string{
+						fmt.Sprintf("-mysql_server_version=%s", globals.MysqlVersion),
+					}
+					if globals.ExtraVTGateFlags != "" {
+						addlGatewayFlags = append(addlGatewayFlags, strings.Split(globals.ExtraVTGateFlags, ",")...)
+					}
+					vitessContainer.Config.Cmd = append(vitessContainer.Config.Cmd, addlGatewayFlags...)
 				}
 			}
 
 			if vitessContainer.Name == "mysqld" {
 				addlMysqldFlags := []string{
 					fmt.Sprintf("--server-id=%d", n),
+				}
+				if globals.ExtraMySQLFlags != "" {
+					addlMysqldFlags = append(addlMysqldFlags, strings.Split(globals.ExtraMySQLFlags, ",")...)
 				}
 				vitessContainer.Config.Cmd = append(vitessContainer.Config.Cmd, addlMysqldFlags...)
 				addlMysqldEnvs := []string{

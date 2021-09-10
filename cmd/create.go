@@ -74,4 +74,7 @@ func init() {
 
 	createClusterCmd.Flags().StringVarP(&globals.ClusterVersion, "version", "v", "latest", "version of vitess")
 	createClusterCmd.Flags().StringVarP(&globals.MysqlVersion, "mysql-version", "m", "latest", "version of mysql")
+	createClusterCmd.Flags().StringVarP(&globals.ExtraVTGateFlags, "extra-vtgate-flags", "", "", "CSV list of additional flags for vtgate")
+	createClusterCmd.Flags().StringVarP(&globals.ExtraVTTabletFlags, "extra-vttablet-flags", "", "", "CSV list of additional flags for vttablet")
+	createClusterCmd.Flags().StringVarP(&globals.ExtraMySQLFlags, "extra-mysqld-flags", "", "", "CSV list of additional flags for mysqld")
 }

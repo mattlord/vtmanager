@@ -60,6 +60,9 @@ var (
 	BaseTabletAliasFlag = string(fmt.Sprintf("-tablet-path=%s", VITESS_CELL))
 	CellFlag            = string(fmt.Sprintf("-cell=%s", VITESS_CELL))
 	TopoImplFlag        = string("-topo_implementation=etcd2")
+	ExtraVTGateFlags    string
+	ExtraVTTabletFlags  string
+	ExtraMySQLFlags     string
 	//mysqlStaticAuthStr  = string("{'mysql_user': [ { 'Password': '', 'UserData': 'root' } ] }")
 	VitessContainers = []*VitessContainer{
 		{
