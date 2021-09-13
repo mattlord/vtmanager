@@ -28,7 +28,9 @@ const (
 	BACKUP_BASEDIR              = "/tmp"
 	ETCD_CONTAINER_IMAGE        = "docker.io/bitnami/etcd:3.5.0"
 	ETCD_PORT                   = 2379
+	MYSQL_CNF                   = "/etc/my.cnf"
 	MYSQL_CONTAINER_IMAGE       = "docker.io/mysql/mysql-server"
+	MYSQL_DATADIR               = "/var/lib/mysql"
 	MYSQL_PASSWD                = ""
 	MYSQL_PORT                  = 3306
 	MYSQL_USER                  = "root"
@@ -63,6 +65,9 @@ var (
 	ExtraVTGateFlags    string
 	ExtraVTTabletFlags  string
 	ExtraMySQLFlags     string
+	vtContainerEnv      = []string{
+		"PATH=/vt/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin",
+	}
 	//mysqlStaticAuthStr  = string("{'mysql_user': [ { 'Password': '', 'UserData': 'root' } ] }")
 	VitessContainers = []*VitessContainer{
 		{
@@ -98,6 +103,7 @@ var (
 					fmt.Sprintf("-file_backup_storage_root=%s", BACKUP_BASEDIR),
 					"-service_map=grpc-vtctl,grpc-vtctld",
 				},
+				Env: vtContainerEnv,
 				Tty: false,
 			},
 			Netconfig: network.NetworkingConfig{
@@ -151,6 +157,7 @@ var (
 					fmt.Sprintf("-file_backup_storage_root=%s", BACKUP_BASEDIR),
 					"-service_map=grpc-queryservice,grpc-tabletmanager,grpc-updatestream",
 				},
+				Env: vtContainerEnv,
 				Tty: false,
 			},
 			Netconfig: network.NetworkingConfig{
@@ -177,6 +184,7 @@ var (
 					//"-mysql_auth_server_impl=static",
 					//fmt.Sprintf("-mysql_auth_server_static_string=\"%s\"", mysqlStaticAuthStr),
 				},
+				Env: vtContainerEnv,
 				Tty: false,
 			},
 			Netconfig: network.NetworkingConfig{

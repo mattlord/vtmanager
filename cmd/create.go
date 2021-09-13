@@ -19,9 +19,15 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/docker/docker/client"
 	"github.com/mattlord/vtmanager/globals"
 	"github.com/mattlord/vtmanager/util"
 	"github.com/spf13/cobra"
+)
+
+var (
+	clusterName  string
+	keyspaceName string
 )
 
 func runCreate(cmd *cobra.Command, args []string) {
@@ -40,7 +46,15 @@ func runCreateCluster(cmd *cobra.Command, args []string) {
 }
 
 func runCreateKeyspace(cmd *cobra.Command, args []string) {
-	fmt.Printf("create keyspace called with %s\n", args)
+	keyspaceName = args[0]
+
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		panic(err)
+	}
+	util.ContainerExec(context.Background(), cli, fmt.Sprintf("vtctld-%s", clusterName), []string{
+		"/vt/bin/vtctlclient", fmt.Sprintf("-server=localhost:%d", globals.VT_GRPC_PORT), "CreateKeyspace", keyspaceName,
+	})
 }
 
 // createCmd represents the create command
@@ -60,9 +74,10 @@ var createClusterCmd = &cobra.Command{
 }
 
 var createKeyspaceCmd = &cobra.Command{
-	Use:   "keyspace",
+	Use:   "keyspace [name]",
 	Short: "Create Vitess keyspace",
 	Long:  ``,
+	Args:  cobra.ExactArgs(1),
 	Run:   runCreateKeyspace,
 }
 
@@ -70,11 +85,13 @@ func init() {
 	rootCmd.AddCommand(createCmd)
 
 	createCmd.AddCommand(createClusterCmd)
-	createCmd.AddCommand(createKeyspaceCmd)
-
 	createClusterCmd.Flags().StringVarP(&globals.ClusterVersion, "version", "v", "latest", "version of vitess")
 	createClusterCmd.Flags().StringVarP(&globals.MysqlVersion, "mysql-version", "m", "latest", "version of mysql")
 	createClusterCmd.Flags().StringVarP(&globals.ExtraVTGateFlags, "extra-vtgate-flags", "", "", "CSV list of additional flags for vtgate")
 	createClusterCmd.Flags().StringVarP(&globals.ExtraVTTabletFlags, "extra-vttablet-flags", "", "", "CSV list of additional flags for vttablet")
 	createClusterCmd.Flags().StringVarP(&globals.ExtraMySQLFlags, "extra-mysqld-flags", "", "", "CSV list of additional flags for mysqld")
+
+	createCmd.AddCommand(createKeyspaceCmd)
+	createKeyspaceCmd.Flags().StringVarP(&clusterName, "cluster", "c", "", "cluster to add keyspace in")
+	createKeyspaceCmd.MarkPersistentFlagRequired("cluster")
 }

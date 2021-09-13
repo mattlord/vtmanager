@@ -244,6 +244,7 @@ func ContainerRun(ctx context.Context, cli *client.Client, clusterName string, k
 
 func ContainerExec(ctx context.Context, cli client.APIClient, id string, cmd []string) int {
 	execConfig := types.ExecConfig{
+		User:         "root",
 		AttachStdout: false,
 		AttachStderr: false,
 		Cmd:          cmd,
