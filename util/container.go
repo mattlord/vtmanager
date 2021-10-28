@@ -52,6 +52,14 @@ func ContainerRuntimeInit(ctx context.Context, clusterName string) *client.Clien
 	spinr.FinalMSG = "done!"
 
 	for _, baseVitessContainer := range globals.VitessContainers {
+    if baseVitessContainer.Name =="mysqld" && globals.MysqlVendor != "mysql" {
+			if globals.MysqlVendor == "percona" {
+					baseVitessContainer.Config.Image = "docker.io/perconalab/percona-server"
+				} else if globals.MysqlVendor == "mariadb" {
+					baseVitessContainer.Config.Image = "docker.io/mariadb"
+				}
+		}
+
 		if baseVitessContainer.Name == "mysqld" && globals.MysqlVersion != "latest" {
 			baseVitessContainer.Config.Image += ":" + globals.MysqlVersion
 		}
