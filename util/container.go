@@ -168,7 +168,7 @@ func ContainerRun(ctx context.Context, cli *client.Client, clusterName string, k
 				}
 				// MariaDB needs some special care here for GTID configuration
 				if globals.MysqlFlavor == "mariadb" {
-					addlMysqldFlags = append(addlMysqldFlags, fmt.Sprintf("--gtid_domain_id=%d", n), fmt.Sprintf("--log-bin=%s", n),)
+					addlMysqldFlags = append(addlMysqldFlags, fmt.Sprintf("--gtid_domain_id=%d", n), fmt.Sprintf("--log-bin=%s", vitessContainer.Config.Hostname),)
 				}
 				if globals.ExtraMySQLFlags != "" {
 					addlMysqldFlags = append(addlMysqldFlags, strings.Split(globals.ExtraMySQLFlags, ",")...)
