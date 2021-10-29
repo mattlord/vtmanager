@@ -58,7 +58,7 @@ type VitessContainer struct {
 var (
 	ClusterVersion      string
 	MysqlVersion        string
-	MysqlVendor         string
+	MysqlFlavor         string
 	TopoGlobalRootFlag  = string(fmt.Sprintf("-topo_global_root=%s", TOPO_GLOBAL_ROOT))
 	BaseTabletAliasFlag = string(fmt.Sprintf("-tablet-path=%s", VITESS_CELL))
 	CellFlag            = string(fmt.Sprintf("-cell=%s", VITESS_CELL))

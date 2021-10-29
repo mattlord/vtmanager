@@ -52,12 +52,15 @@ func ContainerRuntimeInit(ctx context.Context, clusterName string) *client.Clien
 	spinr.FinalMSG = "done!"
 
 	for _, baseVitessContainer := range globals.VitessContainers {
-    if baseVitessContainer.Name =="mysqld" && globals.MysqlVendor != "mysql" {
-			if globals.MysqlVendor == "percona" {
+    if baseVitessContainer.Name =="mysqld" && globals.MysqlFlavor != "mysql" {
+			if globals.MysqlFlavor == "percona" {
 					baseVitessContainer.Config.Image = "docker.io/perconalab/percona-server"
-				} else if globals.MysqlVendor == "mariadb" {
+			} else if globals.MysqlFlavor == "mariadb" {
 					baseVitessContainer.Config.Image = "docker.io/mariadb"
-				}
+
+					//Change GTID setting as MariaDB is not compatiable with gtid-mode and enforce_gtid_consistency
+					baseVitessContainer.Config.Cmd = []string{}
+			}
 		}
 
 		if baseVitessContainer.Name == "mysqld" && globals.MysqlVersion != "latest" {
@@ -162,6 +165,10 @@ func ContainerRun(ctx context.Context, cli *client.Client, clusterName string, k
 			if vitessContainer.Name == "mysqld" {
 				addlMysqldFlags := []string{
 					fmt.Sprintf("--server-id=%d", n),
+				}
+				// MariaDB needs some special care here for GTID configuration
+				if globals.MysqlFlavor == "mariadb" {
+					addlMysqldFlags = append(addlMysqldFlags, fmt.Sprintf("--gtid_domain_id=%d", n), fmt.Sprintf("--log-bin=%s", n),)
 				}
 				if globals.ExtraMySQLFlags != "" {
 					addlMysqldFlags = append(addlMysqldFlags, strings.Split(globals.ExtraMySQLFlags, ",")...)
